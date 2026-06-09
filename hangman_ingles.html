@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hangman - Inglés Básico</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.5.0/dist/tabler-icons.min.css">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: #F5F4EF;
+    color: #1F1E1B;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .container {
+    max-width: 700px;
+    margin: 0 auto;
+    background: #FFFFFF;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  h1 {
+    text-align: center;
+    margin: 0 0 6px;
+    font-size: 26px;
+    font-weight: 500;
+    color: #3C3489;
+  }
+  .subtitle {
+    text-align: center;
+    color: #6B6A65;
+    font-size: 14px;
+    margin: 0 0 24px;
+  }
+
+  .hg-mode {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    margin-bottom: 20px;
+    background: #F1EFE8;
+    padding: 4px;
+    border-radius: 8px;
+  }
+  .hg-mode-btn {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #6B6A65;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-family: inherit;
+  }
+  .hg-mode-btn.active {
+    background: #FFFFFF;
+    color: #1F1E1B;
+    border: 0.5px solid rgba(0,0,0,0.1);
+  }
+
+  .hg-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .hg-stat {
+    background: #F1EFE8;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+  }
+  .hg-stat-label {
+    font-size: 12px;
+    color: #6B6A65;
+  }
+  .hg-stat-val {
+    font-size: 24px;
+    font-weight: 500;
+    margin-top: 2px;
+  }
+
+  .hg-timer {
+    margin-bottom: 20px;
+  }
+  .hg-timer-bar {
+    height: 12px;
+    background: #F1EFE8;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .hg-timer-fill {
+    height: 100%;
+    background: #1D9E75;
+    transition: width 1s linear, background 0.3s;
+    width: 100%;
+  }
+  .hg-timer-fill.warn { background: #BA7517; }
+  .hg-timer-fill.danger { background: #E24B4A; }
+  .hg-timer-text {
+    text-align: center;
+    font-size: 14px;
+    color: #6B6A65;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .hg-cat-row { text-align: center; margin-bottom: 10px; }
+  .hg-cat {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #EEEDFE;
+    color: #3C3489;
+    font-size: 14px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-weight: 500;
+  }
+
+  .hg-clue {
+    background: #E6F1FB;
+    color: #0C447C;
+    padding: 18px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 18px;
+  }
+
+  .hg-word {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    min-height: 60px;
+  }
+  .hg-slot {
+    min-width: 42px;
+    height: 56px;
+    border-bottom: 3px solid rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 500;
+    padding: 0 4px;
+  }
+  .hg-slot.revealed {
+    color: #173404;
+    border-bottom-color: #639922;
+  }
+
+  .hg-lives {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .hg-heart {
+    font-size: 28px;
+    color: #E24B4A;
+    transition: opacity 0.3s;
+  }
+  .hg-heart.lost {
+    opacity: 0.2;
+    color: #B4B2A9;
+  }
+
+  .hg-keyboard {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .hg-key {
+    padding: 14px 0;
+    border-radius: 8px;
+    border: 0.5px solid rgba(0,0,0,0.15);
+    background: #FFFFFF;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    color: #1F1E1B;
+    font-family: inherit;
+    transition: background 0.15s;
+  }
+  .hg-key:hover:not(:disabled) { background: #F1EFE8; }
+  .hg-key:disabled { cursor: not-allowed; }
+  .hg-key.correct {
+    background: #C0DD97;
+    color: #173404;
+    border-color: #639922;
+  }
+  .hg-key.wrong {
+    background: #F7C1C1;
+    color: #501313;
+    border-color: #A32D2D;
+  }
+
+  .hg-msg {
+    text-align: center;
+    padding: 16px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+    font-size: 17px;
+    font-weight: 500;
+  }
+  .hg-msg.win { background: #EAF3DE; color: #173404; }
+  .hg-msg.lose { background: #FCEBEB; color: #501313; }
+  .hg-msg.hidden { display: none; }
+
+  .hg-controls {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .hg-btn {
+    padding: 12px 20px;
+    border-radius: 8px;
+    border: 0.5px solid rgba(0,0,0,0.15);
+    background: #FFFFFF;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1F1E1B;
+    font-family: inherit;
+  }
+  .hg-btn:hover { background: #F1EFE8; }
+  .hg-btn.primary {
+    background: #3C3489;
+    color: white;
+    border-color: #3C3489;
+  }
+  .hg-btn.primary:hover { background: #26215C; }
+
+  @media (max-width: 500px) {
+    .container { padding: 16px; }
+    .hg-keyboard { grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .hg-key { padding: 12px 0; font-size: 14px; }
+    .hg-slot { min-width: 32px; height: 46px; font-size: 24px; }
+    h1 { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Hangman</h1>
+  <p class="subtitle">Adivina la palabra en inglés usando la pista</p>
+
+  <div class="hg-mode">
+    <button class="hg-mode-btn active" id="hg-mode-off"><i class="ti ti-mood-smile" aria-hidden="true"></i> Sin reloj</button>
+    <button class="hg-mode-btn" id="hg-mode-on"><i class="ti ti-clock" aria-hidden="true"></i> Con reloj</button>
+  </div>
+
+  <div class="hg-stats">
+    <div class="hg-stat">
+      <div class="hg-stat-label">Aciertos</div>
+      <div class="hg-stat-val" id="hg-wins">0</div>
+    </div>
+    <div class="hg-stat">
+      <div class="hg-stat-label">Intentos</div>
+      <div class="hg-stat-val" id="hg-total">1</div>
+    </div>
+    <div class="hg-stat">
+      <div class="hg-stat-label">Racha</div>
+      <div class="hg-stat-val" id="hg-streak">0</div>
+    </div>
+  </div>
+
+  <div class="hg-timer" id="hg-timer" style="display: none;">
+    <div class="hg-timer-bar"><div class="hg-timer-fill" id="hg-timer-fill"></div></div>
+    <div class="hg-timer-text"><i class="ti ti-clock" aria-hidden="true"></i> <span id="hg-timer-text">40</span> segundos</div>
+  </div>
+
+  <div class="hg-cat-row">
+    <span class="hg-cat"><i class="ti ti-puzzle" id="hg-cat-icon" aria-hidden="true"></i> <span id="hg-cat-name">...</span></span>
+  </div>
+  <div class="hg-clue" id="hg-clue-text">...</div>
+
+  <div class="hg-word" id="hg-word"></div>
+  <div class="hg-lives" id="hg-lives"></div>
+
+  <div class="hg-msg hidden" id="hg-msg"></div>
+
+  <div class="hg-keyboard" id="hg-keyboard"></div>
+
+  <div class="hg-controls">
+    <button class="hg-btn" id="hg-skip">Saltar palabra</button>
+    <button class="hg-btn primary" id="hg-next" style="display:none;">Siguiente palabra</button>
+  </div>
+</div>
+
+<script>
+(function() {
+  const CAT_ICONS = {
+    "Animales": "ti-paw",
+    "Naturaleza": "ti-tree",
+    "Clima": "ti-cloud-rain",
+    "Comida": "ti-apple",
+    "Familia": "ti-users",
+    "Cuerpo": "ti-heart",
+    "Colores": "ti-palette",
+    "Escuela": "ti-book",
+    "Juguetes": "ti-ball-football",
+    "Casa": "ti-home",
+    "Cosas": "ti-box",
+    "Números": "ti-numbers"
+  };
+
+  const WORDS = [
+    { word: "CAT", clue: "Animal que dice miau", cat: "Animales" },
+    { word: "DOG", clue: "Animal que dice guau", cat: "Animales" },
+    { word: "FISH", clue: "Vive en el agua y tiene aletas", cat: "Animales" },
+    { word: "BIRD", clue: "Animal que vuela y canta", cat: "Animales" },
+    { word: "COW", clue: "Animal grande que da leche", cat: "Animales" },
+    { word: "FROG", clue: "Animal verde que salta", cat: "Animales" },
+    { word: "BEAR", clue: "Animal grande y peludo del bosque", cat: "Animales" },
+    { word: "DUCK", clue: "Animal que hace cuac-cuac", cat: "Animales" },
+    { word: "SUN", clue: "Brilla en el cielo de día", cat: "Naturaleza" },
+    { word: "MOON", clue: "Brilla en el cielo de noche", cat: "Naturaleza" },
+    { word: "STAR", clue: "Punto brillante del cielo nocturno", cat: "Naturaleza" },
+    { word: "TREE", clue: "Planta grande con tronco y hojas", cat: "Naturaleza" },
+    { word: "RAIN", clue: "Agua que cae del cielo", cat: "Clima" },
+    { word: "SNOW", clue: "Cae del cielo cuando hace mucho frío", cat: "Clima" },
+    { word: "APPLE", clue: "Fruta roja muy común", cat: "Comida" },
+    { word: "CAKE", clue: "Postre dulce de los cumpleaños", cat: "Comida" },
+    { word: "EGG", clue: "Lo pone la gallina", cat: "Comida" },
+    { word: "MILK", clue: "Bebida blanca de la vaca", cat: "Comida" },
+    { word: "MOM", clue: "Mamá en inglés", cat: "Familia" },
+    { word: "DAD", clue: "Papá en inglés", cat: "Familia" },
+    { word: "BABY", clue: "Niño muy pequeño", cat: "Familia" },
+    { word: "EYE", clue: "Lo usas para ver", cat: "Cuerpo" },
+    { word: "HAND", clue: "Tiene cinco dedos", cat: "Cuerpo" },
+    { word: "FOOT", clue: "Lo usas para caminar", cat: "Cuerpo" },
+    { word: "RED", clue: "Color de la sangre y los tomates", cat: "Colores" },
+    { word: "BLUE", clue: "Color del cielo y del mar", cat: "Colores" },
+    { word: "GREEN", clue: "Color del pasto y las hojas", cat: "Colores" },
+    { word: "PINK", clue: "Color rosado", cat: "Colores" },
+    { word: "BOOK", clue: "Tiene páginas y se lee", cat: "Escuela" },
+    { word: "BALL", clue: "Es redonda y se usa para jugar", cat: "Juguetes" },
+    { word: "CAR", clue: "Vehículo de cuatro ruedas", cat: "Cosas" },
+    { word: "BED", clue: "Mueble donde duermes", cat: "Casa" },
+    { word: "HOUSE", clue: "Lugar donde vives con tu familia", cat: "Casa" },
+    { word: "KEY", clue: "Sirve para abrir las puertas", cat: "Cosas" },
+    { word: "ONE", clue: "El número 1", cat: "Números" },
+    { word: "TWO", clue: "El número 2", cat: "Números" },
+    { word: "THREE", clue: "El número 3", cat: "Números" }
+  ];
+
+  const TIMER_SECONDS = 40;
+
+  let state = {
+    current: null, revealed: new Set(), wrong: new Set(),
+    lives: 6, wins: 0, total: 0, streak: 0,
+    finished: false, used: new Set(),
+    timerMode: false, timeLeft: TIMER_SECONDS, timerInterval: null
+  };
+
+  const $ = (id) => document.getElementById(id);
+
+  function pickWord() {
+    if (state.used.size >= WORDS.length) state.used.clear();
+    const available = WORDS.filter((_, i) => !state.used.has(i));
+    const chosen = available[Math.floor(Math.random() * available.length)];
+    state.used.add(WORDS.indexOf(chosen));
+    return chosen;
+  }
+
+  function startNew() {
+    stopTimer();
+    state.current = pickWord();
+    state.revealed = new Set();
+    state.wrong = new Set();
+    state.lives = 6;
+    state.finished = false;
+    state.total++;
+    render();
+    if (state.timerMode) startTimer();
+  }
+
+  function startTimer() {
+    stopTimer();
+    state.timeLeft = TIMER_SECONDS;
+    updateTimerDisplay();
+    state.timerInterval = setInterval(() => {
+      state.timeLeft--;
+      updateTimerDisplay();
+      if (state.timeLeft <= 0) {
+        stopTimer();
+        timeUp();
+      }
+    }, 1000);
+  }
+
+  function stopTimer() {
+    if (state.timerInterval) {
+      clearInterval(state.timerInterval);
+      state.timerInterval = null;
+    }
+  }
+
+  function updateTimerDisplay() {
+    const wrap = $("hg-timer");
+    if (!state.timerMode) { wrap.style.display = "none"; return; }
+    wrap.style.display = "block";
+    const fill = $("hg-timer-fill");
+    const pct = Math.max(0, Math.round((state.timeLeft / TIMER_SECONDS) * 100));
+    fill.style.width = pct + "%";
+    $("hg-timer-text").textContent = state.timeLeft;
+    fill.classList.remove("warn", "danger");
+    if (state.timeLeft <= 10) fill.classList.add("danger");
+    else if (state.timeLeft <= 20) fill.classList.add("warn");
+  }
+
+  function timeUp() {
+    if (state.finished) return;
+    state.finished = true;
+    state.streak = 0;
+    showMessage("¡Se acabó el tiempo! La palabra era: " + state.current.word, "lose");
+    render();
+  }
+
+  function renderWord() {
+    const container = $("hg-word");
+    container.innerHTML = "";
+    for (const ch of state.current.word) {
+      const slot = document.createElement("div");
+      slot.className = "hg-slot";
+      if (state.revealed.has(ch) || state.finished) {
+        slot.textContent = ch;
+        slot.classList.add("revealed");
+      }
+      container.appendChild(slot);
+    }
+  }
+
+  function renderLives() {
+    const container = $("hg-lives");
+    container.innerHTML = "";
+    for (let i = 0; i < 6; i++) {
+      const heart = document.createElement("i");
+      heart.className = "ti ti-heart hg-heart" + (i >= state.lives ? " lost" : "");
+      heart.setAttribute("aria-hidden", "true");
+      container.appendChild(heart);
+    }
+  }
+
+  function renderKeyboard() {
+    const container = $("hg-keyboard");
+    container.innerHTML = "";
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    for (const L of letters) {
+      const btn = document.createElement("button");
+      btn.className = "hg-key";
+      btn.textContent = L;
+      btn.setAttribute("aria-label", "Letra " + L);
+      if (state.revealed.has(L)) { btn.classList.add("correct"); btn.disabled = true; }
+      else if (state.wrong.has(L)) { btn.classList.add("wrong"); btn.disabled = true; }
+      else if (state.finished) { btn.disabled = true; }
+      else { btn.onclick = () => guess(L); }
+      container.appendChild(btn);
+    }
+  }
+
+  function renderStats() {
+    $("hg-wins").textContent = state.wins;
+    $("hg-total").textContent = state.total;
+    $("hg-streak").textContent = state.streak;
+    $("hg-cat-name").textContent = state.current.cat;
+    const iconClass = CAT_ICONS[state.current.cat] || "ti-puzzle";
+    $("hg-cat-icon").className = "ti " + iconClass;
+    $("hg-clue-text").textContent = state.current.clue;
+  }
+
+  function checkWin() {
+    for (const ch of state.current.word) {
+      if (!state.revealed.has(ch)) return false;
+    }
+    return true;
+  }
+
+  function guess(letter) {
+    if (state.finished) return;
+    if (state.current.word.includes(letter)) {
+      state.revealed.add(letter);
+      if (checkWin()) {
+        state.finished = true;
+        state.wins++;
+        state.streak++;
+        stopTimer();
+        const msgs = ["¡Excelente! Adivinaste la palabra.", "¡Muy bien! Lo lograste.", "¡Genial! Eres muy bueno en esto."];
+        showMessage(msgs[Math.floor(Math.random() * msgs.length)], "win");
+      }
+    } else {
+      state.wrong.add(letter);
+      state.lives--;
+      if (state.lives <= 0) {
+        state.finished = true;
+        state.streak = 0;
+        stopTimer();
+        showMessage("¡Casi! La palabra era: " + state.current.word, "lose");
+      }
+    }
+    render();
+  }
+
+  function showMessage(text, type) {
+    const msg = $("hg-msg");
+    msg.textContent = text;
+    msg.className = "hg-msg " + type;
+    $("hg-next").style.display = "inline-block";
+    $("hg-skip").style.display = "none";
+  }
+
+  function hideMessage() {
+    $("hg-msg").className = "hg-msg hidden";
+    $("hg-next").style.display = "none";
+    $("hg-skip").style.display = "inline-block";
+  }
+
+  function render() {
+    renderWord();
+    renderLives();
+    renderKeyboard();
+    renderStats();
+    updateTimerDisplay();
+    if (!state.finished) hideMessage();
+  }
+
+  $("hg-next").onclick = () => startNew();
+  $("hg-skip").onclick = () => {
+    stopTimer();
+    state.finished = true;
+    state.streak = 0;
+    showMessage("La palabra era: " + state.current.word, "lose");
+    render();
+  };
+
+  $("hg-mode-off").onclick = () => {
+    state.timerMode = false;
+    $("hg-mode-off").classList.add("active");
+    $("hg-mode-on").classList.remove("active");
+    stopTimer();
+    updateTimerDisplay();
+  };
+
+  $("hg-mode-on").onclick = () => {
+    state.timerMode = true;
+    $("hg-mode-on").classList.add("active");
+    $("hg-mode-off").classList.remove("active");
+    if (!state.finished) startTimer();
+    else updateTimerDisplay();
+  };
+
+  document.addEventListener("keydown", (e) => {
+    if (state.finished) {
+      if (e.key === "Enter") startNew();
+      return;
+    }
+    const k = e.key.toUpperCase();
+    if (k.length === 1 && k >= "A" && k <= "Z" && !state.revealed.has(k) && !state.wrong.has(k)) {
+      guess(k);
+    }
+  });
+
+  startNew();
+})();
+</script>
+</body>
+</html>
