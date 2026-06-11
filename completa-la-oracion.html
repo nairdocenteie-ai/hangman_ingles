@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Completa la oración - English Game</title>
+<style>
+  :root{
+    --cielo:#8ED6F8;
+    --cielo-osc:#4FB3E8;
+    --crema:#FFF9EC;
+    --sol:#FFC83D;
+    --coral:#FF7B6B;
+    --verde:#5BC489;
+    --tinta:#2B3A55;
+    --blanco:#FFFFFF;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+  body{
+    font-family: ui-rounded, "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: linear-gradient(180deg, var(--cielo) 0%, #BDE8FA 60%, var(--crema) 100%);
+    min-height:100vh;
+    display:flex; align-items:center; justify-content:center;
+    padding:16px;
+    color:var(--tinta);
+  }
+  .juego{
+    width:100%; max-width:480px;
+    background:var(--blanco);
+    border-radius:28px;
+    box-shadow:0 12px 0 rgba(43,58,85,.12), 0 20px 40px rgba(43,58,85,.15);
+    overflow:hidden;
+  }
+  /* ---------- Encabezado ---------- */
+  header{
+    background:var(--sol);
+    padding:14px 20px;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  header h1{font-size:1.05rem; letter-spacing:.5px;}
+  .marcador{
+    background:var(--blanco);
+    border-radius:999px;
+    padding:6px 14px;
+    font-weight:800;
+    font-size:.95rem;
+    box-shadow:0 3px 0 rgba(43,58,85,.15);
+  }
+  .progreso{
+    height:10px; background:#F0E6D2;
+  }
+  .progreso > div{
+    height:100%; width:0%;
+    background:var(--verde);
+    transition:width .4s ease;
+    border-radius:0 999px 999px 0;
+  }
+  /* ---------- Escena ---------- */
+  .escena{
+    text-align:center;
+    padding:22px 20px 6px;
+  }
+  .categoria{
+    display:inline-block;
+    background:var(--cielo);
+    color:var(--tinta);
+    font-size:.75rem; font-weight:800;
+    letter-spacing:1.5px; text-transform:uppercase;
+    padding:5px 14px; border-radius:999px;
+    margin-bottom:10px;
+  }
+  .imagen{
+    font-size:5.2rem;
+    line-height:1.2;
+    animation:flotar 2.6s ease-in-out infinite;
+    user-select:none;
+  }
+  @keyframes flotar{
+    0%,100%{transform:translateY(0)}
+    50%{transform:translateY(-10px)}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .imagen{animation:none}
+  }
+  .oracion{
+    font-size:1.5rem;
+    font-weight:800;
+    margin:14px 6px 6px;
+    line-height:1.5;
+  }
+  .hueco{
+    display:inline-block;
+    min-width:90px;
+    border-bottom:4px dashed var(--cielo-osc);
+    color:var(--cielo-osc);
+    padding:0 6px;
+    transition:all .3s;
+  }
+  .hueco.lleno{
+    border-bottom-color:var(--verde);
+    color:var(--verde);
+  }
+  .pista{
+    font-size:.95rem;
+    color:#7A8499;
+    font-style:italic;
+    margin-bottom:8px;
+  }
+  /* ---------- Opciones ---------- */
+  .opciones{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(110px,1fr));
+    gap:12px;
+    padding:14px 20px 8px;
+  }
+  .opciones button{
+    font-family:inherit;
+    font-size:1.15rem; font-weight:800;
+    padding:14px 8px;
+    border:none; border-radius:18px;
+    background:var(--crema);
+    color:var(--tinta);
+    box-shadow:0 5px 0 #E8DCC2;
+    cursor:pointer;
+    transition:transform .12s, box-shadow .12s, background .25s;
+  }
+  .opciones button:hover{transform:translateY(-2px);}
+  .opciones button:focus-visible{outline:3px solid var(--cielo-osc); outline-offset:2px;}
+  .opciones button:active{transform:translateY(3px); box-shadow:0 2px 0 #E8DCC2;}
+  .opciones button.correcta{background:var(--verde); color:#fff; box-shadow:0 5px 0 #3E9B68;}
+  .opciones button.incorrecta{background:var(--coral); color:#fff; box-shadow:0 5px 0 #D55546; animation:temblar .35s;}
+  .opciones button:disabled{cursor:default;}
+  @keyframes temblar{
+    0%,100%{transform:translateX(0)}
+    25%{transform:translateX(-6px)}
+    75%{transform:translateX(6px)}
+  }
+  /* ---------- Mensaje y siguiente ---------- */
+  .mensaje{
+    text-align:center;
+    min-height:32px;
+    font-weight:800;
+    font-size:1.05rem;
+    padding:4px 20px;
+  }
+  .mensaje.bien{color:var(--verde);}
+  .mensaje.mal{color:var(--coral);}
+  .pie{
+    display:flex; justify-content:center;
+    padding:8px 20px 22px;
+  }
+  .btn-grande{
+    font-family:inherit;
+    font-size:1.1rem; font-weight:800;
+    padding:14px 38px;
+    border:none; border-radius:999px;
+    background:var(--cielo-osc); color:#fff;
+    box-shadow:0 5px 0 #2E8FC4;
+    cursor:pointer;
+    transition:transform .12s, opacity .25s;
+  }
+  .btn-grande:hover{transform:translateY(-2px);}
+  .btn-grande:focus-visible{outline:3px solid var(--sol); outline-offset:2px;}
+  .btn-grande:active{transform:translateY(3px);}
+  .btn-grande[hidden]{display:none;}
+  /* ---------- Pantalla final ---------- */
+  .final{
+    text-align:center;
+    padding:40px 24px;
+  }
+  .final .trofeo{font-size:5rem;}
+  .final h2{font-size:1.6rem; margin:10px 0 6px;}
+  .final p{font-size:1.05rem; color:#5A6478; margin-bottom:6px;}
+  .estrellas{font-size:2.2rem; letter-spacing:6px; margin:10px 0 18px;}
+  /* ---------- Confeti ---------- */
+  .confeti{
+    position:fixed; top:-12px;
+    font-size:1.4rem;
+    pointer-events:none;
+    animation:caer 1.4s linear forwards;
+    z-index:50;
+  }
+  @keyframes caer{
+    to{transform:translateY(105vh) rotate(360deg); opacity:.2;}
+  }
+</style>
+</head>
+<body>
+
+<div class="juego">
+  <header>
+    <h1>🎯 Completa la oración</h1>
+    <div class="marcador">⭐ <span id="puntos">0</span></div>
+  </header>
+  <div class="progreso"><div id="barra"></div></div>
+
+  <div id="pantalla-juego">
+    <div class="escena">
+      <span class="categoria" id="categoria"></span>
+      <div class="imagen" id="imagen"></div>
+      <p class="oracion" id="oracion"></p>
+      <p class="pista" id="pista"></p>
+    </div>
+    <div class="opciones" id="opciones"></div>
+    <p class="mensaje" id="mensaje"></p>
+    <div class="pie">
+      <button class="btn-grande" id="btn-siguiente" hidden>Siguiente ➜</button>
+    </div>
+  </div>
+
+  <div id="pantalla-final" class="final" hidden>
+    <div class="trofeo" id="trofeo">🏆</div>
+    <h2 id="titulo-final"></h2>
+    <div class="estrellas" id="estrellas"></div>
+    <p id="resumen"></p>
+    <p style="margin-bottom:18px" id="animo"></p>
+    <button class="btn-grande" id="btn-reiniciar">Jugar otra vez 🔄</button>
+  </div>
+</div>
+
+<script>
+// ====== PREGUNTAS ======
+// texto: usa ___ donde va la palabra que falta
+const PREGUNTAS = [
+  // --- Saludos ---
+  {cat:"Saludos", img:"🌞", texto:"Good ___!", pista:"Es de mañana: ¡Buenos días!", correcta:"morning", opciones:["morning","night","dog"]},
+  {cat:"Saludos", img:"🌙", texto:"Good ___!", pista:"Te vas a dormir: ¡Buenas noches!", correcta:"night", opciones:["night","morning","apple"]},
+  {cat:"Saludos", img:"👋", texto:"___, my friend!", pista:"Saludas a un amigo: ¡Hola!", correcta:"Hello", opciones:["Hello","Goodbye","Blue"]},
+  {cat:"Saludos", img:"🚪", texto:"___, see you tomorrow!", pista:"Te despides: ¡Adiós!", correcta:"Goodbye", opciones:["Goodbye","Hello","Cat"]},
+  {cat:"Saludos", img:"🙂", texto:"How ___ you?", pista:"Preguntas: ¿Cómo estás?", correcta:"are", opciones:["are","is","am"]},
+  {cat:"Saludos", img:"😄", texto:"I am ___, thank you!", pista:"Respondes: Estoy bien, ¡gracias!", correcta:"fine", opciones:["fine","table","run"]},
+
+  // --- Animales ---
+  {cat:"Animales", img:"🐶", texto:"The ___ says woof!", pista:"Este animal es el perro.", correcta:"dog", opciones:["dog","cat","bird"]},
+  {cat:"Animales", img:"🐱", texto:"The ___ says meow!", pista:"Este animal es el gato.", correcta:"cat", opciones:["cat","dog","fish"]},
+  {cat:"Animales", img:"🐦", texto:"The ___ can fly.", pista:"El pájaro puede volar.", correcta:"bird", opciones:["bird","cow","pig"]},
+  {cat:"Animales", img:"🐟", texto:"The ___ lives in water.", pista:"El pez vive en el agua.", correcta:"fish", opciones:["fish","horse","hen"]},
+  {cat:"Animales", img:"🐮", texto:"The ___ gives us milk.", pista:"La vaca nos da leche.", correcta:"cow", opciones:["cow","duck","lion"]},
+  {cat:"Animales", img:"🦁", texto:"The ___ is the king of the jungle.", pista:"El león es el rey de la selva.", correcta:"lion", opciones:["lion","rabbit","frog"]},
+
+  // --- Colores ---
+  {cat:"Colores", img:"🍎", texto:"The apple is ___.", pista:"La manzana es roja.", correcta:"red", opciones:["red","blue","green"]},
+  {cat:"Colores", img:"🌊", texto:"The sea is ___.", pista:"El mar es azul.", correcta:"blue", opciones:["blue","yellow","red"]},
+  {cat:"Colores", img:"🌳", texto:"The tree is ___.", pista:"El árbol es verde.", correcta:"green", opciones:["green","pink","black"]},
+  {cat:"Colores", img:"🌻", texto:"The flower is ___.", pista:"El girasol es amarillo.", correcta:"yellow", opciones:["yellow","white","blue"]},
+
+  // --- Números ---
+  {cat:"Números", img:"✌️", texto:"I have ___ hands.", pista:"Tienes dos manos.", correcta:"two", opciones:["two","five","one"]},
+  {cat:"Números", img:"🖐️", texto:"I have ___ fingers on one hand.", pista:"Cinco dedos en una mano.", correcta:"five", opciones:["five","three","ten"]},
+  {cat:"Números", img:"☝️", texto:"I have ___ nose.", pista:"Tienes una nariz.", correcta:"one", opciones:["one","four","six"]},
+
+  // --- Familia ---
+  {cat:"Familia", img:"👩", texto:"She is my ___.", pista:"Ella es mi mamá.", correcta:"mother", opciones:["mother","father","brother"]},
+  {cat:"Familia", img:"👨", texto:"He is my ___.", pista:"Él es mi papá.", correcta:"father", opciones:["father","sister","cat"]},
+  {cat:"Familia", img:"👦", texto:"He is my ___.", pista:"Él es mi hermano.", correcta:"brother", opciones:["brother","mother","dog"]},
+];
+
+// ====== ESTADO ======
+let orden = [];
+let actual = 0;
+let puntos = 0;
+let aciertos = 0;
+
+// ====== ELEMENTOS ======
+const $ = id => document.getElementById(id);
+const elCat = $("categoria"), elImg = $("imagen"), elOra = $("oracion"),
+      elPis = $("pista"), elOpc = $("opciones"), elMsg = $("mensaje"),
+      elPts = $("puntos"), elBarra = $("barra"),
+      btnSig = $("btn-siguiente"),
+      pantallaJuego = $("pantalla-juego"), pantallaFinal = $("pantalla-final");
+
+// ====== FUNCIONES ======
+function mezclar(arr){
+  const a = [...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function iniciar(){
+  orden = mezclar(PREGUNTAS);
+  actual = 0; puntos = 0; aciertos = 0;
+  elPts.textContent = "0";
+  pantallaFinal.hidden = true;
+  pantallaJuego.hidden = false;
+  mostrarPregunta();
+}
+
+function mostrarPregunta(){
+  const p = orden[actual];
+  elCat.textContent = p.cat;
+  elImg.textContent = p.img;
+  elPis.textContent = "💡 " + p.pista;
+  elMsg.textContent = ""; elMsg.className = "mensaje";
+  btnSig.hidden = true;
+  elBarra.style.width = (actual / orden.length * 100) + "%";
+
+  // Oración con hueco
+  elOra.innerHTML = "";
+  p.texto.split("___").forEach((parte, i, arr) => {
+    elOra.appendChild(document.createTextNode(parte));
+    if(i < arr.length - 1){
+      const hueco = document.createElement("span");
+      hueco.className = "hueco";
+      hueco.id = "hueco";
+      hueco.textContent = "____";
+      elOra.appendChild(hueco);
+    }
+  });
+
+  // Opciones
+  elOpc.innerHTML = "";
+  mezclar(p.opciones).forEach(palabra => {
+    const b = document.createElement("button");
+    b.textContent = palabra;
+    b.onclick = () => responder(b, palabra, p);
+    elOpc.appendChild(b);
+  });
+}
+
+function responder(boton, palabra, p){
+  const botones = elOpc.querySelectorAll("button");
+  botones.forEach(b => b.disabled = true);
+
+  const hueco = $("hueco");
+  if(palabra === p.correcta){
+    boton.classList.add("correcta");
+    hueco.textContent = p.correcta;
+    hueco.classList.add("lleno");
+    puntos += 10; aciertos++;
+    elPts.textContent = puntos;
+    elMsg.textContent = "✅ Very good! ¡Muy bien!";
+    elMsg.classList.add("bien");
+    confeti();
+  } else {
+    boton.classList.add("incorrecta");
+    botones.forEach(b => { if(b.textContent === p.correcta) b.classList.add("correcta"); });
+    hueco.textContent = p.correcta;
+    hueco.classList.add("lleno");
+    elMsg.textContent = "❌ La respuesta era: " + p.correcta;
+    elMsg.classList.add("mal");
+  }
+  btnSig.hidden = false;
+  btnSig.focus();
+}
+
+function siguiente(){
+  actual++;
+  if(actual < orden.length){
+    mostrarPregunta();
+  } else {
+    terminar();
+  }
+}
+
+function terminar(){
+  elBarra.style.width = "100%";
+  pantallaJuego.hidden = true;
+  pantallaFinal.hidden = false;
+
+  const total = orden.length;
+  const pct = aciertos / total;
+  let estrellas, trofeo, titulo, animo;
+  if(pct === 1){ estrellas="⭐⭐⭐"; trofeo="🏆"; titulo="Perfect! ¡Perfecto!"; animo="¡Eres una estrella del inglés! 🌟"; }
+  else if(pct >= 0.7){ estrellas="⭐⭐"; trofeo="🥇"; titulo="Great job! ¡Buen trabajo!"; animo="¡Ya casi lo logras todo, sigue así! 💪"; }
+  else if(pct >= 0.4){ estrellas="⭐"; trofeo="🥈"; titulo="Good try! ¡Buen intento!"; animo="¡Practica otra vez y mejorarás! 😊"; }
+  else { estrellas="🌱"; trofeo="🎈"; titulo="Keep going! ¡Sigue adelante!"; animo="Cada intento te hace mejor. ¡Tú puedes! 🚀"; }
+
+  $("trofeo").textContent = trofeo;
+  $("titulo-final").textContent = titulo;
+  $("estrellas").textContent = estrellas;
+  $("resumen").textContent = `Acertaste ${aciertos} de ${total} oraciones · ${puntos} puntos`;
+  $("animo").textContent = animo;
+}
+
+function confeti(){
+  const figuras = ["🎉","⭐","💛","✨","🎈"];
+  for(let i=0;i<14;i++){
+    const c = document.createElement("span");
+    c.className = "confeti";
+    c.textContent = figuras[Math.floor(Math.random()*figuras.length)];
+    c.style.left = Math.random()*100 + "vw";
+    c.style.animationDelay = (Math.random()*0.4) + "s";
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(), 2000);
+  }
+}
+
+btnSig.onclick = siguiente;
+$("btn-reiniciar").onclick = iniciar;
+iniciar();
+</script>
+</body>
+</html>
